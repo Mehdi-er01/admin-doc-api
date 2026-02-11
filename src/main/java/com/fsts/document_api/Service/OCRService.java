@@ -1,4 +1,6 @@
-package main.java.com.fsts.document_api.Service;
+package com.fsts.document_api.Service;
+
+import org.springframework.web.multipart.MultipartFile;
 
 public class OCRService {
     

@@ -1,4 +1,6 @@
-package main.java.com.fsts.document_api.Service;
+import org.springframework.stereotype.Service;
+
+packagecom.fsts.document_api.Service;
 
 @Service
 public class LLMService {
