@@ -19,7 +19,7 @@ public class ValidationService {
         if(file.isEmpty()){
             return false;
         }
-        // Vérifier que le PDF est lisible
+
         String filename = file.getOriginalFilename();
         if (filename == null || !filename.toLowerCase().endsWith(".pdf")) {
             return false;
