@@ -1,12 +1,11 @@
-<<<<<<< HEAD
-import org.springframework.stereotype.Service;
-
-packagecom.fsts.document_api.Service;
-=======
 package com.fsts.document_api.Service;
 
 import org.springframework.stereotype.Service;
->>>>>>> 4d34ee5ca857548648bc6e5242278a55c779a63c
+
+
+
+import org.springframework.stereotype.Service;
+
 
 @Service
 public class LLMService {

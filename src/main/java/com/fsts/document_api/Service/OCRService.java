@@ -1,12 +1,12 @@
 package com.fsts.document_api.Service;
-<<<<<<< HEAD
+
 
 import org.springframework.web.multipart.MultipartFile;
-=======
+
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
->>>>>>> 4d34ee5ca857548648bc6e5242278a55c779a63c
+
 
 import java.io.File;
 import java.io.FileOutputStream;

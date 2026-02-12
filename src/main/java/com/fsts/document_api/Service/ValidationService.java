@@ -12,9 +12,9 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class ValidationService {
     
-     public
+
     
-<<<<<<< HEAD
+
     public boolean validateDocument(MultipartFile file) {
         if(file.isEmpty()){
             return false;
@@ -24,7 +24,7 @@ public class ValidationService {
         if (filename == null || !filename.toLowerCase().endsWith(".pdf")) {
             return false;
         }
-
+        return true ;
     }
 
     public boolean validateLLMResponse(String response) {
@@ -56,13 +56,7 @@ public class ValidationService {
             System.out.println("Réponse JSON invalide : " + e.getMessage());
             return false;
         }
-=======
-    public static boolean validateDocument(MultipartFile file) {
-        return false;
-    }
-    public static boolean validateLLMResponse(String response) {
-        return false;
->>>>>>> 4d34ee5ca857548648bc6e5242278a55c779a63c
+
     }
 
 }
