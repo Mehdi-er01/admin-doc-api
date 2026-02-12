@@ -31,19 +31,19 @@ public class ValidationService {
         try {
 
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode champ = mapper.readTree(response);
+            JsonNode champs = mapper.readTree(response);
 
             String[] formatJson = {"cin","nom", "prenom", "date_naissance", "adresse"};
 
-            for (String field : formatJson) {
-                if (!champ.has(field) || champ.get(field).asText().trim().isEmpty()) {
-                    System.out.println("Champ manquant ou vide : " + field);
+            for (String champ : formatJson) {
+                if (!champs.has(champ) || champs.get(champ).asText().trim().isEmpty()) {
+                    System.out.println("Champ manquant ou vide : " + champ);
                     return false;
                 }
             }
 
 
-            String dateNaissance = champ.get("date_naissance").asText();
+            String dateNaissance = champs.get("date_naissance").asText();
             if (!dateNaissance.matches("\\d{2}[-./]\\d{2}[-./]\\d{4}")) {
                 System.out.println("Format de date incorrect : " + dateNaissance);
                 return false;

@@ -1,5 +1,6 @@
 package com.fsts.document_api.Controller;
 
+import com.fsts.document_api.Service.ProcessService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -9,30 +10,31 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-<<<<<<< HEAD
+import com.fsts.document_api.Service.OCRService;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-=======
-import com.fsts.document_api.Service.OCRService;
-import com.fsts.document_api.Service.ProcessService;
->>>>>>> 4d34ee5ca857548648bc6e5242278a55c779a63c
 
 @RestController
 @RequestMapping("/api")
 public class DocumentController {
 
 
+    private final ProcessService processService;
+    public DocumentController(ProcessService processService){
+        this.processService=processService;
+    }
+    /**
 
-    @Autowired OCRService ocr;
+     * @param document : fichier PDF
+     * @return JSON généré par le ProcessService
+     */
+
+//    @Autowired OCRService ocr;
     @PostMapping(value = "/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-<<<<<<< HEAD
-    public ResponseEntity<String> uploadFile(@RequestPart("document") MultipartFile document) {
 
-
-
-=======
     public ResponseEntity<String> uploadFile (
         @RequestPart("document") MultipartFile document
         // @RequestPart("metadata") String metadata
@@ -40,11 +42,12 @@ public class DocumentController {
     
         // String response = ProcessService.processDocument(document, metadata);
         try {
-            return ResponseEntity.ok(ocr.performOCR(document));
+            String resultatJson=processService.processDocument(document);
+            return ResponseEntity.ok(resultatJson);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error processing document: " + e.getMessage());
         }
         
->>>>>>> 4d34ee5ca857548648bc6e5242278a55c779a63c
+
     }
 }

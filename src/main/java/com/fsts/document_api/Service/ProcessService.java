@@ -15,7 +15,7 @@ public class ProcessService {
         this.llmService=llmService;
     }
    
-    public String processDocument(MultipartFile file, String metadata) throws Exception {
+    public String processDocument(MultipartFile file) throws Exception {
         if(!valideService.validateDocument(file)){
             throw  new Exception("Document invalide");
         }
