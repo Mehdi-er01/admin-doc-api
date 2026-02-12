@@ -52,4 +52,8 @@ public class DocumentController {
         
 
     }
+    @GetMapping("/test")
+    public ResponseEntity<String> testService() {
+        return ResponseEntity.ok("Le service Document API fonctionne !");
+    }
 }

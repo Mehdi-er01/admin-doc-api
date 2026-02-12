@@ -67,6 +67,12 @@ public class LLMService {
                 .body(requestBody)
                 .retrieve()
                 .body(String.class);
+//        String response = this.restClient.post()
+//                .uri("") // le path est déjà dans apiUrl
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .body(requestBody)
+//                .retrieve()
+//                .body(String.class);
 
         return response;
     }
