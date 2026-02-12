@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fsts.document_api.Service.OCRService;
+import com.fsts.document_api.Service.ProcessService;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +23,7 @@ public class DocumentController {
 
 
 
-    @Autowired OCRService ocr;
+    @Autowired ProcessService processService;
     @PostMapping(value = "/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 
     public ResponseEntity<String> uploadFile (
@@ -32,7 +33,7 @@ public class DocumentController {
     
         // String response = ProcessService.processDocument(document, metadata);
         try {
-            return ResponseEntity.ok(ocr.performOCR(document));
+            return ResponseEntity.ok(processService.processDocument(document, null));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error processing document: " + e.getMessage());
         }
