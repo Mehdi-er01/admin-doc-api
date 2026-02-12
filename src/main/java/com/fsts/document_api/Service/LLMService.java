@@ -1,74 +1,93 @@
 package com.fsts.document_api.Service;
 
-import java.util.List;
-import java.util.Map;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import java.util.Map;
+
+final record GeminiRequest(List<Content> contents) {}
+final record Content(List<Part> parts) {}
+final record Part(String text) {}
+
+
 @Service
 public class LLMService {
+    @Autowired
+    private Environment env;
 
-    private  final StringBuilder prompt = new StringBuilder();
-    private  final RestClient restClient;
-    private final String apiKey;
+    private RestClient restClient = RestClient.create();
+    // private final String apiKey;
+    // private final String model;
+    // private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public LLMService(@Value("${gemini.api.url}") String apiUrl,
-        @Value("${gemini.api.key}") String apiKey) {
+    private static final String SYSTEM_PROMPT = """
+            ### SYSTEM ROLE
+            You are a specialized data extraction AI. Your task is to extract structured information from the raw OCR text of a Moroccan National Identity Card (CIN).
 
-        this.apiKey = apiKey;
-        this.restClient = RestClient.builder()
-                .baseUrl(apiUrl)
-                .build();
-        prompt.append(
-                """
-                        ### SYSTEM ROLE
-                        You are a specialized data extraction AI. Your task is to extract structured information from the raw OCR text of a Moroccan National Identity Card (CIN).
+            ### INSTRUCTIONS
+            1. Analyze the provided "Raw OCR Text" below.
+            2. Extract the following fields strictly.
+            3. Fix obvious OCR errors (e.g., if "N0m" appears, read it as "Nom").
+            4. Output ONLY valid JSON.
 
-                        ### INSTRUCTIONS
-                        1. Analyze the provided "Raw OCR Text" below.
-                        2. Extract the following fields strictly.
-                        3. Fix obvious OCR errors (e.g., if "N0m" appears, read it as "Nom").
-                        4. Output ONLY valid JSON. Do not include Markdown formatting (like ```json).
+            ### TARGET SCHEMA
+            {
+              "cin": "String",
+              "nom": "String",
+              "prenom": "String",
+              "date_naissance": "String (DD/MM/YYYY)",
+              "adresse": "String"
+            }
 
-                        ### TARGET SCHEMA
-                        {
-                          "cin": "String (The alphanumeric ID number, e.g., AB123456)",
-                          "nom": "String (First and Last name in Latin characters)",
-                          "prenom": "String (First and Last name in Arabic characters, if present)",
-                          "date_naissance": "String (DD/MM/YYYY format)",
-                          "adresse": "String",
-                        }
+            ### HANDLING ERRORS
+            - If a field is not found, set to null.
+            """;
 
-                        ### HANDLING ERRORS
-                        - If a field is not found or unreadable, set the value to null.
-                        - If the date is ambiguous, try to standardize it to DD/MM/YYYY.
+    
 
-                        ### RAW OCR TEXT
-                        """);
+    public String generateResponse(String ocrText) throws JsonMappingException, JsonProcessingException {
 
-    }
+        String userMessage = "### RAW OCR TEXT\n" + ocrText;
+        Map<String,Object> requestBody = Map.of("contents",List.of(
+            Map.of("role", "user","parts",List.of(Map.of("text",userMessage)))
+        ),
+        "generationConfig", Map.of(
+        "response_mime_type", "application/json",
+        "temperature", 0.2),
+        "systemInstruction",Map.of(
+        "parts", List.of(Map.of("text", SYSTEM_PROMPT))
+    ));
 
-    public String generateResponse(String extractedData) {
-        this.prompt.append(extractedData);
+        String rawJson = restClient.post()
+            .uri("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent")
+            .contentType(MediaType.APPLICATION_JSON)
+            .header("x-goog-api-key", env.getProperty("gemini_api_key"))
+            .body(requestBody)
+            .retrieve()
+            .body(String.class);
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonRoot = mapper.readTree(rawJson);
         
+        String result = jsonRoot.path("candidates")
+        .get(0)
+        .path("content")
+        .path("parts")
+        .get(0)
+        .path("text")
+        .asText();
+
+
+        return result;
         
-        Map<String, Object> requestBody = Map.of(
-            "contents", List.of(
-                Map.of("parts", List.of(
-                    Map.of("text", this.prompt)
-                ))));
-
-        String response = this.restClient.post()
-                .uri(uriBuilder -> uriBuilder.queryParam("key", this.apiKey).build())
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(requestBody)
-                .retrieve()
-                .body(String.class);
-
-        return response;
     }
-
 }
