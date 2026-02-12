@@ -12,9 +12,6 @@ import tools.jackson.databind.ObjectMapper;
 @Service
 public class ValidationService {
     
-
-    
-
     public boolean validateDocument(MultipartFile file) {
         if(file.isEmpty()){
             return false;
@@ -24,7 +21,9 @@ public class ValidationService {
         if (filename == null || !filename.toLowerCase().endsWith(".pdf")) {
             return false;
         }
-        return true ;
+
+        return true;
+
     }
 
     public boolean validateLLMResponse(String response) {
@@ -58,5 +57,4 @@ public class ValidationService {
         }
 
     }
-
 }
