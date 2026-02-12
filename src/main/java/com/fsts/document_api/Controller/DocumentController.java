@@ -26,11 +26,13 @@ public class DocumentController {
     public DocumentController(ProcessService processService){
         this.processService=processService;
     }
+
     /**
 
      * @param document : fichier PDF
      * @return JSON généré par le ProcessService
      */
+
 
 //    @Autowired OCRService ocr;
     @PostMapping(value = "/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
