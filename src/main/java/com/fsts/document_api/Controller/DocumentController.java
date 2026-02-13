@@ -19,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api")
+//@CrossOrigin(origins = "http://localhost:5500")
+@CrossOrigin(origins = "*") // ou "*" pour tester
 public class DocumentController {
 
 
