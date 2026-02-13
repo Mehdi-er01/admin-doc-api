@@ -54,4 +54,13 @@ public class DocumentController {
         
 
     }
+    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> uploadImage(@RequestPart("document") MultipartFile file) {
+        try {
+            String resultatJson = processService.processImage(file);
+            return ResponseEntity.ok(resultatJson);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erreur lors du traitement de l'image : " + e.getMessage());
+        }
+    }
 }
