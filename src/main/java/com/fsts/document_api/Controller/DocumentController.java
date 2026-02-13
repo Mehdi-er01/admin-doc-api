@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fsts.document_api.Service.LLMService;
 import com.fsts.document_api.Service.OCRService;
 
 import org.springframework.http.MediaType;
@@ -33,25 +34,20 @@ public class DocumentController {
 
      * @param document : fichier PDF
      * @return JSON généré par le ProcessService
+     * @throws Exception 
+     * 
+     * 
      */
-
-
-//    @Autowired OCRService ocr;
     @PostMapping(value = "/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 
     public ResponseEntity<String> uploadFile (
         @RequestPart("document") MultipartFile document
         // @RequestPart("metadata") String metadata
-    ) {
+    ) throws Exception {
     
         // String response = ProcessService.processDocument(document, metadata);
-        try {
-            String resultatJson=processService.processDocument(document);
-            return ResponseEntity.ok(resultatJson);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error processing document: " + e.getMessage());
-        }
-        
+        String response = processService.processDocument(document);
+        return ResponseEntity.ok(response);
 
     }
     @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

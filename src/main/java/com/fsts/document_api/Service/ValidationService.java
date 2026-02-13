@@ -3,6 +3,8 @@ package com.fsts.document_api.Service;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,24 +17,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class ValidationService {
+    private static final Map<String, String> SUPPORTED_MEDIA_TYPES = Map.of(
+        "application/pdf", "PDF",
+        "image/jpeg", "JPEG",
+        "image/png", "PNG"
+    );
     
-//    public boolean validateDocument(MultipartFile file) {
-//        if(file.isEmpty()){
-//            return false;
-//        }
-//
-//        String filename = file.getOriginalFilename();
-//        if (filename == null || !filename.toLowerCase().endsWith(".pdf")) {
-//            return false;
-//        }
-//
-//        return true;
-//
-//    }
     public boolean validateDocument(MultipartFile file) {
         if(file.isEmpty()){
             return false;
         }
+
         String filename = file.getOriginalFilename();
         if (filename == null) return false;
 

@@ -1,6 +1,9 @@
 package com.fsts.document_api.Service;
 
 import org.springframework.web.multipart.MultipartFile;
+
+import com.fsts.document_api.Exception.FileProcessingException;
+
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
@@ -18,23 +21,32 @@ import org.springframework.stereotype.Service;
 public class OCRService {
     
     
-    public String performOCR(MultipartFile file) throws IOException,TesseractException{
+    public String performOCR(MultipartFile file){
 
         ITesseract tesseract = new Tesseract();
         File tessDataFolder = loadTessData();
         tesseract.setDatapath(tessDataFolder.getAbsolutePath());
         tesseract.setLanguage("fra");
-        String result = tesseract.doOCR(convertMultipartToFile(file));
-        //we still need some processing
-        //and exception handling we will add it later
+        String result;
+        try {
+            result = tesseract.doOCR(convertMultipartToFile(file));
+        } catch (TesseractException e) {
+            throw new RuntimeException("Error performing OCR: " + e.getMessage());
+        }
+        
         return result;
 
     }
 
 
-    private File loadTessData() throws IOException{
+    private File loadTessData() throws FileProcessingException {
 
-    Path tempDir = Files.createTempDirectory("tessdata_temp");
+    Path tempDir;
+    try {
+        tempDir = Files.createTempDirectory("tessdata_temp");
+    } catch (IOException e) {
+        throw new FileProcessingException("Error creating temporary directory for tessdata: " + e.getMessage());
+    }
     File tempDirFile = tempDir.toFile();
     tempDirFile.deleteOnExit();
 
@@ -42,19 +54,26 @@ public class OCRService {
 
     if (resource.exists()) {
                 File dest = new File(tempDirFile, "fra.traineddata");
-                Files.copy(resource.getInputStream(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                
+                try{
+                    Files.copy(resource.getInputStream(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException e) {
+                    throw new FileProcessingException("Error copying tessdata file: " + e.getMessage());
+                }
     }
     
     return tempDirFile;
         
     }
 
-    private File convertMultipartToFile(MultipartFile multipartFile) throws IOException {
+    private File convertMultipartToFile(MultipartFile multipartFile) throws FileProcessingException {
    
     File convFile = new File(System.getProperty("java.io.tmpdir") + "/" + multipartFile.getOriginalFilename());
     
     try (FileOutputStream fos = new FileOutputStream(convFile)) {
         fos.write(multipartFile.getBytes());
+    } catch(IOException e) {
+        throw new FileProcessingException("Error converting multipart file to file: " + e.getMessage());
     }
     
     return convFile;

@@ -11,6 +11,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fsts.document_api.Exception.JsonDataMappingException;
+
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +56,7 @@ public class LLMService {
 
     
 
-    public String generateResponse(String ocrText) throws JsonMappingException, JsonProcessingException {
+    public String generateResponse(String ocrText) throws JsonDataMappingException {
 
         String userMessage = "### RAW OCR TEXT\n" + ocrText;
         Map<String,Object> requestBody = Map.of("contents",List.of(
@@ -76,7 +78,13 @@ public class LLMService {
             .body(String.class);
 
         ObjectMapper mapper = new ObjectMapper();
-        JsonNode jsonRoot = mapper.readTree(rawJson);
+        JsonNode jsonRoot = null;
+        try {
+            jsonRoot = mapper.readTree(rawJson);
+        } catch (JsonProcessingException e) {
+            throw new JsonDataMappingException(e.getMessage());
+        }
+        
         
         String result = jsonRoot.path("candidates")
         .get(0)
