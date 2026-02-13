@@ -34,4 +34,28 @@ public class ProcessService {
 
         return jsonResult;
     }
+    public String processImage(MultipartFile file) throws Exception {
+        // Valider le fichier (on peut accepter pdf ou images ici)
+        if (!valideService.validateDocument(file)) {
+            throw new Exception("Fichier invalide");
+        }
+
+        // Extraire le texte via OCR
+        String extractedText = ocrService.performOCR(file);
+
+        if (extractedText == null || extractedText.trim().isEmpty()) {
+            throw new Exception("Aucun texte extrait de l'image");
+        }
+
+        // Générer le JSON via LLM
+        String jsonResult = llmService.generateResponse(extractedText);
+
+        // Valider le JSON
+        if (!valideService.validateLLMResponse(jsonResult)) {
+            throw new Exception("JSON invalide généré par le LLM");
+        }
+
+        return jsonResult;
+    }
+
 }

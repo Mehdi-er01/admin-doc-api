@@ -16,18 +16,33 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Service
 public class ValidationService {
     
+//    public boolean validateDocument(MultipartFile file) {
+//        if(file.isEmpty()){
+//            return false;
+//        }
+//
+//        String filename = file.getOriginalFilename();
+//        if (filename == null || !filename.toLowerCase().endsWith(".pdf")) {
+//            return false;
+//        }
+//
+//        return true;
+//
+//    }
     public boolean validateDocument(MultipartFile file) {
         if(file.isEmpty()){
             return false;
         }
-
         String filename = file.getOriginalFilename();
-        if (filename == null || !filename.toLowerCase().endsWith(".pdf")) {
+        if (filename == null) return false;
+
+        // Autoriser PDF et images
+        String lower = filename.toLowerCase();
+        if (!(lower.endsWith(".pdf") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png"))) {
             return false;
         }
 
         return true;
-
     }
 
     public boolean validateLLMResponse(String response) {
