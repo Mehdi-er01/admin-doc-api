@@ -66,7 +66,7 @@ public class OCRService {
         
     }
 
-    private File convertMultipartToFile(MultipartFile multipartFile) throws FileProcessingException {
+    public static File convertMultipartToFile(MultipartFile multipartFile) throws FileProcessingException {
    
     File convFile = new File(System.getProperty("java.io.tmpdir") + "/" + multipartFile.getOriginalFilename());
     

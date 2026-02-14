@@ -13,6 +13,8 @@ import org.springframework.web.multipart.MultipartFile;
 //
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fsts.document_api.Exception.JsonDataMappingException;
+import com.fsts.document_api.Exception.RequiredFieldMissingException;
 
 
 @Service
@@ -32,42 +34,35 @@ public class ValidationService {
         if (filename == null) return false;
 
         // Autoriser PDF et images
-        String lower = filename.toLowerCase();
-        if (!(lower.endsWith(".pdf") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png"))) {
+        String extension = filename.toUpperCase().substring(filename.lastIndexOf(".")+1);
+        if (!SUPPORTED_MEDIA_TYPES.containsKey(file.getContentType()) ||
+            !SUPPORTED_MEDIA_TYPES.values().contains(extension)) {
             return false;
         }
 
         return true;
     }
 
-    public boolean validateLLMResponse(String response) {
+    public boolean validateLLMResponse(String response, String[] documentFields) {
         try {
 
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode champs = mapper.readTree(response);
-
-            String[] formatJson = {"cin","nom", "prenom", "date_naissance", "adresse"};
-
-            for (String champ : formatJson) {
-                if (!champs.has(champ) || champs.get(champ).asText().trim().isEmpty()) {
-                    System.out.println("Champ manquant ou vide : " + champ);
-                    return false;
+            JsonNode fields = mapper.readTree(response);
+            
+            for (String field : documentFields) {
+                if (!fields.has(field) || fields.get(field).asText().trim().isEmpty()) {
+                    throw new RequiredFieldMissingException("required field '" + field + "' is missing or empty in the LLM response");
                 }
             }
-
-
-            String dateNaissance = champs.get("date_naissance").asText();
-            if (!dateNaissance.matches("\\d{2}[-./]\\d{2}[-./]\\d{4}")) {
-                System.out.println("Format de date incorrect : " + dateNaissance);
-                return false;
-            }
-
-
+            // String dateNaissance = fields.get("date_naissance").asText();
+            // if (!dateNaissance.matches("\\d{2}[-./]\\d{2}[-./]\\d{4}")) {
+            //     System.out.println("Format de date incorrect : " + dateNaissance);
+            //     return false;
+            // }
             return true;
 
         } catch (Exception e) {
-            System.out.println("Réponse JSON invalide : " + e.getMessage());
-            return false;
+            throw new JsonDataMappingException("Invalid JSON response format: " + e.getMessage());
         }
 
     }

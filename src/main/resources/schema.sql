@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS document_types (
+    id IDENTITY PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    fields CLOB NOT NULL 
+);
+CREATE TABLE IF NOT EXISTS documents (
+    id IDENTITY PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    type_id BIGINT NOT NULL,
+    content CLOB NOT NULL,
+    FOREIGN KEY (type_id) REFERENCES document_types(id)
+);

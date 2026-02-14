@@ -3,7 +3,7 @@ import lombok.Builder;
 
 
 public class InvalidDocumentException extends RuntimeException {
-    InvalidDocumentException(String message) {
+    public InvalidDocumentException(String message) {
         super(message);
     }
 }

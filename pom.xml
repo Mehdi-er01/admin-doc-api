@@ -68,7 +68,7 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
-			<scope>test</scope>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
@@ -78,24 +78,24 @@
 			<groupId>org.apache.httpcomponents.client5</groupId>
 			<artifactId>httpclient5</artifactId>
 		</dependency>
-<!--        ajouter -->
-        <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>pdfbox</artifactId>
-            <version>2.0.30</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.15.2</version>
-        </dependency>
 		<dependency>
-			<groupId>com.fasterxml.jackson.datatype</groupId>
-			<artifactId>jackson-datatype-jsr310</artifactId>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>2.2.224</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.httpcomponents.client5</groupId>
-			<artifactId>httpclient5</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>pdfbox</artifactId>
+			<version>2.0.30</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.15.2</version>
 		</dependency>
 	</dependencies>
 
@@ -113,26 +113,27 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
-<!--			<plugin>-->
-<!--				<groupId>gg.jte</groupId>-->
-<!--				<artifactId>jte-maven-plugin</artifactId>-->
-<!--				<version>3.1.16</version>-->
-<!--				<executions>-->
-<!--					<execution>-->
-<!--						<id>jte-generate</id>-->
-<!--						<phase>generate-sources</phase>-->
-<!--						<goals>-->
-<!--							<goal>generate</goal>-->
-<!--						</goals>-->
-<!--						<configuration>-->
-<!--							<sourceDirectory>${project.basedir}/src/main/jte</sourceDirectory>-->
-<!--							<contentType>Html</contentType>-->
-<!--							<binaryStaticContent>true</binaryStaticContent>-->
-<!--							<targetResourceDirectory>${project.build.outputDirectory}</targetResourceDirectory>-->
-<!--						</configuration>-->
-<!--					</execution>-->
-<!--				</executions>-->
-<!--			</plugin>-->
+			<!--			<plugin>-->
+			<!--				<groupId>gg.jte</groupId>-->
+			<!--				<artifactId>jte-maven-plugin</artifactId>-->
+			<!--				<version>3.1.16</version>-->
+			<!--				<executions>-->
+			<!--					<execution>-->
+			<!--						<id>jte-generate</id>-->
+			<!--						<phase>generate-sources</phase>-->
+			<!--						<goals>-->
+			<!--							<goal>generate</goal>-->
+			<!--						</goals>-->
+			<!--						<configuration>-->
+			<!--							<sourceDirectory>${project.basedir}/src/main/jte</sourceDirectory>-->
+			<!--							<contentType>Html</contentType>-->
+			<!--							<binaryStaticContent>true</binaryStaticContent>-->
+			<!--
+			<targetResourceDirectory>${project.build.outputDirectory}</targetResourceDirectory>-->
+			<!--						</configuration>-->
+			<!--					</execution>-->
+			<!--				</executions>-->
+			<!--			</plugin>-->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

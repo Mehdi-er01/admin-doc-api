@@ -1,7 +1,7 @@
 package com.fsts.document_api.Exception;
 
 public class RequiredFieldMissingException extends RuntimeException {
-    RequiredFieldMissingException(String message) {
+    public RequiredFieldMissingException(String message) {
         super(message);
     }
 }

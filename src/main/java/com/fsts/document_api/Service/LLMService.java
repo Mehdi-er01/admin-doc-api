@@ -56,9 +56,18 @@ public class LLMService {
 
     
 
-    public String generateResponse(String ocrText) throws JsonDataMappingException {
+    public String generateResponse(String ocrText, String[] documentFields) throws JsonDataMappingException {
 
-        String userMessage = "### RAW OCR TEXT\n" + ocrText;
+        String userMessage = """
+                ### TARGET FIELDS
+                [
+                    """ + String.join(", ", documentFields) + """ 
+            ]       
+                    
+                ### RAW OCR TEXT
+                """ + ocrText;
+
+        
         Map<String,Object> requestBody = Map.of("contents",List.of(
             Map.of("role", "user","parts",List.of(Map.of("text",userMessage)))
         ),
