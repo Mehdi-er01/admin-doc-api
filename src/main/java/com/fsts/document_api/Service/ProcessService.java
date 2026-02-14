@@ -53,6 +53,7 @@ public class ProcessService {
             throw new Exception("JSON invalide généré par le LLM");
         }
 
+        
         return jsonResult;
     }
 
