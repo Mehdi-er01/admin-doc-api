@@ -1,10 +1,12 @@
 package com.fsts.document_api.Service;
 
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
+import java.util.List;
 import com.fsts.document_api.Entity.DocumentType;
 import com.fsts.document_api.Exception.InvalidDocumentException;
+import com.fsts.document_api.Record.DocumentTypeField;
 
 @Service
 public class ProcessService {
@@ -42,7 +44,7 @@ public class ProcessService {
             throw new InvalidDocumentException("no text extracted from the fjle");
         }
 
-        String[] documentFields = documentTypeService
+        List<DocumentTypeField> documentFields = documentTypeService
                 .getDocumentTypeByName(type)
                 .getDocumentFields();
 

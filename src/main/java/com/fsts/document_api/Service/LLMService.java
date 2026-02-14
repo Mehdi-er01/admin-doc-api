@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fsts.document_api.Exception.JsonDataMappingException;
+import com.fsts.document_api.Record.DocumentTypeField;
 
 import java.util.List;
 import java.util.Map;
@@ -56,12 +57,12 @@ public class LLMService {
 
     
 
-    public String generateResponse(String ocrText, String[] documentFields) throws JsonDataMappingException {
+    public String generateResponse(String ocrText, List<DocumentTypeField> documentFields) throws JsonDataMappingException {
 
         String userMessage = """
                 ### TARGET FIELDS
                 [
-                    """ + String.join(", ", documentFields) + """ 
+                    """ + String.join(", ", documentFields.stream().map(f -> f.name()).toList()) + """ 
             ]       
                     
                 ### RAW OCR TEXT

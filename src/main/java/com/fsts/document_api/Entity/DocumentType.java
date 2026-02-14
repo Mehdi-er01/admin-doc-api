@@ -2,7 +2,9 @@ package com.fsts.document_api.Entity;
 
 import java.util.List;
 
-import com.fsts.document_api.Utils.StringArrayConverter;
+import com.fsts.document_api.Enum.FieldType;
+import com.fsts.document_api.Record.DocumentTypeField;
+import com.fsts.document_api.Utils.JsonListConverter;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -37,9 +39,9 @@ public class DocumentType {
     private String name;
 
     @Lob
-    @Convert(converter = StringArrayConverter.class)
+    @Convert(converter = JsonListConverter.class)
     @Column(name = "fields", nullable = false)
-    private String[] documentFields;
+    private List<DocumentTypeField> documentFields;
 
 
     @OneToMany(mappedBy = "documentType", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -47,3 +49,4 @@ public class DocumentType {
 
     
 }
+

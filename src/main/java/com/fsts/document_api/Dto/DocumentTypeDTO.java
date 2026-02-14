@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.fsts.document_api.Record.DocumentTypeField;
+import java.util.List;
 
 @Getter
 @Setter
@@ -12,5 +14,5 @@ import lombok.Setter;
 public class DocumentTypeDTO {
     private Long id;
     private String name;
-    private String[] documentFields;
+    private List<DocumentTypeField> documentFields;
 }

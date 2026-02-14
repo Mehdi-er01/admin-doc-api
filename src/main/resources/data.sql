@@ -2,10 +2,10 @@ DELETE FROM documents;
 DELETE FROM document_types;
 
 INSERT INTO document_types (name, fields) VALUES
-('CIN', '["nom","prenom","date_naissance","lieu_naissance","numero_cin"]'),
-('Passport', '["passport_number","full_name","nationality","date_of_birth","expiry_date"]'),
-('Invoice', '["invoice_number","supplier","client","issue_date","total_amount","currency"]'),
-('BankStatement', '["account_number","account_holder","statement_period","opening_balance","closing_balance"]');
+('CIN', '[{"name":"nom","type":"string"},{"name":"prenom","type":"string"},{"name":"date_naissance","type":"date"},{"name":"lieu_naissance","type":"string"},{"name":"numero_cin","type":"string"}]'),
+('Passport', '[{"name":"passport_number","type":"string"},{"name":"full_name","type":"string"},{"name":"nationality","type":"string"},{"name":"date_of_birth","type":"date"},{"name":"expiry_date","type":"date"}]'),
+('Invoice', '[{"name":"invoice_number","type":"string"},{"name":"supplier","type":"string"},{"name":"client","type":"string"},{"name":"issue_date","type":"date"},{"name":"total_amount","type":"decimal"},{"name":"currency","type":"string"}]'),
+('BankStatement', '[{"name":"account_number","type":"string"},{"name":"account_holder","type":"string"},{"name":"statement_period","type":"string"},{"name":"opening_balance","type":"decimal"},{"name":"closing_balance","type":"decimal"}]');
 
 INSERT INTO documents (created_at, type_id, content) VALUES
 ('2025-01-10 09:15:00', (SELECT id FROM document_types WHERE name = 'CIN'), '{"nom":"Alaoui","prenom":"Youssef","date_naissance":"1998-04-12","lieu_naissance":"Rabat","numero_cin":"AB123456"}'),

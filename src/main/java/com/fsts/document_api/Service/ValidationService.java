@@ -3,6 +3,7 @@ package com.fsts.document_api.Service;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fsts.document_api.Exception.JsonDataMappingException;
 import com.fsts.document_api.Exception.RequiredFieldMissingException;
+import com.fsts.document_api.Record.DocumentTypeField;
 
 
 @Service
@@ -43,15 +45,15 @@ public class ValidationService {
         return true;
     }
 
-    public boolean validateLLMResponse(String response, String[] documentFields) {
+    public boolean validateLLMResponse(String response, List<DocumentTypeField> documentFields) {
         try {
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode fields = mapper.readTree(response);
             
-            for (String field : documentFields) {
-                if (!fields.has(field) || fields.get(field).asText().trim().isEmpty()) {
-                    throw new RequiredFieldMissingException("required field '" + field + "' is missing or empty in the LLM response");
+            for (DocumentTypeField field : documentFields) {
+                if (!fields.has(field.name()) || fields.get(field.name()).asText().trim().isEmpty()) {
+                    throw new RequiredFieldMissingException("required field '" + field.name() + "' is missing or empty in the LLM response");
                 }
             }
             // String dateNaissance = fields.get("date_naissance").asText();

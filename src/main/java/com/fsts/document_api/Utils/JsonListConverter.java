@@ -6,12 +6,18 @@ import com.fsts.document_api.Exception.JsonDataMappingException;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import com.fsts.document_api.Record.DocumentTypeField;
+import java.util.List;
 
 @Converter
-public class StringArrayConverter implements AttributeConverter<String[],String>{
+public class JsonListConverter implements AttributeConverter<List<DocumentTypeField>, String> {
     final private ObjectMapper objectMapper = new ObjectMapper();
+
     @Override
-    public String convertToDatabaseColumn(String[] attribute) {
+    public String convertToDatabaseColumn(List<DocumentTypeField> attribute) {
+        if (attribute == null || attribute.isEmpty()) {
+            return "[]";
+        }
         try {
             return objectMapper.writeValueAsString(attribute);
         } catch (JsonProcessingException e) {
@@ -20,13 +26,17 @@ public class StringArrayConverter implements AttributeConverter<String[],String>
     }
 
     @Override
-    public String[] convertToEntityAttribute(String dbData) {
+    public List<DocumentTypeField> convertToEntityAttribute(String dbData) {
+        if (dbData == null || dbData.isEmpty()) {
+            return List.of();
+        }
         try {
-            return objectMapper.readValue(dbData, String[].class);
+            return objectMapper.readValue(dbData,
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, DocumentTypeField.class));
         } catch (JsonProcessingException e) {
             throw new JsonDataMappingException("Can't Map Database data to Entity Attribute" + e.getMessage());
         }
 
     }
-    
+
 }
