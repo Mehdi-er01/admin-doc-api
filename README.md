@@ -137,7 +137,7 @@ Execution:
 Effectue un appel de demonstration vers `POST /api/documents`.
 
 ```powershell
-.\scripts\demo_upload.ps1 -FilePath ".\Exemples\certificat-administratif.pdf" -Type "CIN" -Model "gemini-1.5-flash"
+.\scripts\demo_upload.ps1 -FilePath ".\Exemples\Inputs\certificat-administratif.pdf" -Type "CIN" -Model "gemini-1.5-flash"
 ```
 
 ## 8. API REST
@@ -158,7 +158,7 @@ Exemple `curl`:
 
 ```bash
 curl -X POST "http://localhost:8080/api/documents" \
-  -F "document=@./Exemples/certificat-administratif.pdf" \
+  -F "document=@./Exemples/Inputs/certificat-administratif.pdf" \
   -F "type=CIN" \
   -F "model=gemini-1.5-flash"
 ```
@@ -205,11 +205,11 @@ Retourne la liste des modeles Gemini disponibles.
 
 Tes fichiers d'exemple detectes:
 
-- `Exemples/certificat-administratif.pdf`
-- `Exemples/ilide.info-attestation-de-formation.pdf`
-- `Exemples/ilide.info-confirmation-de-virement.pdf`
-- `Exemples/ilide.info-fiche-de-releve-de-decision.pdf`
-- `Exemples/Screenshot 2026-02-15 174338.png`
+- `Exemples/Inputs/certificat-administratif.pdf`
+- `Exemples/Inputs/attestation-de-formation.pdf`
+- `Exemples/Inputs/confirmation-de-virement.pdf`
+- `Exemples/Inputs/fiche-de-releve-de-decision.pdf`
+- `Exemples/Inputs/CIN.png`
 
 ## 10. Structure du projet
 
@@ -237,8 +237,9 @@ scripts/
   demo_upload.ps1
 
 Exemples/
-  *.pdf
-  *.png
+  Inputs/
+  Outputs/
+  test_cases.md
 ```
 
 ## 11. Tests

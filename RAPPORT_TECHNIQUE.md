@@ -136,11 +136,11 @@ Scripts fournis:
 
 Fichiers d'exemples:
 
-- `Exemples/certificat-administratif.pdf`
-- `Exemples/ilide.info-attestation-de-formation.pdf`
-- `Exemples/ilide.info-confirmation-de-virement.pdf`
-- `Exemples/ilide.info-fiche-de-releve-de-decision.pdf`
-- `Exemples/Screenshot 2026-02-15 174338.png`
+- `Exemples/Inputs/certificat-administratif.pdf`
+- `Exemples/Inputs/attestation-de-formation.pdf`
+- `Exemples/Inputs/confirmation-de-virement.pdf`
+- `Exemples/Inputs/fiche-de-releve-de-decision.pdf`
+- `Exemples/Inputs/CIN.png`
 
 ## 10. Tests
 
