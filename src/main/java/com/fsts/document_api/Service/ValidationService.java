@@ -1,74 +1,66 @@
 package com.fsts.document_api.Service;
 
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
-
+import java.util.List;
 import java.util.Map;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-//import tools.jackson.databind.JsonNode;
-//import tools.jackson.databind.ObjectMapper;
-//
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fsts.document_api.Enum.FieldType;
+import com.fsts.document_api.Exception.JsonDataMappingException;
+import com.fsts.document_api.Exception.RequiredFieldMissingException;
+import com.fsts.document_api.Record.DocumentTypeField;
 
 
 @Service
 public class ValidationService {
     private static final Map<String, String> SUPPORTED_MEDIA_TYPES = Map.of(
-        "application/pdf", "PDF",
-        "image/jpeg", "JPEG",
-        "image/png", "PNG"
-    );
-    
+            "application/pdf", "PDF",
+            "image/jpeg", "JPEG",
+            "image/png", "PNG");
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+
     public boolean validateDocument(MultipartFile file) {
-        if(file.isEmpty()){
+        if (file.isEmpty()) {
             return false;
         }
 
         String filename = file.getOriginalFilename();
-        if (filename == null) return false;
+        if (filename == null || !filename.contains(".")) {
+            return false;
+        }
 
-        // Autoriser PDF et images
-        String lower = filename.toLowerCase();
-        if (!(lower.endsWith(".pdf") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png"))) {
+        String extension = filename.toUpperCase().substring(filename.lastIndexOf('.') + 1);
+        if (!SUPPORTED_MEDIA_TYPES.containsKey(file.getContentType()) ||
+                !SUPPORTED_MEDIA_TYPES.values().contains(extension)) {
             return false;
         }
 
         return true;
     }
 
-    public boolean validateLLMResponse(String response) {
+    public boolean validateLLMResponse(String response, List<DocumentTypeField> documentFields) {
         try {
+            JsonNode fields = objectMapper.readTree(response);
 
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode champs = mapper.readTree(response);
-
-            String[] formatJson = {"cin","nom", "prenom", "date_naissance", "adresse"};
-
-            for (String champ : formatJson) {
-                if (!champs.has(champ) || champs.get(champ).asText().trim().isEmpty()) {
-                    System.out.println("Champ manquant ou vide : " + champ);
-                    return false;
+            for (DocumentTypeField field : documentFields) {
+                if (!fields.hasNonNull(field.name()) || fields.get(field.name()).asText().trim().isEmpty()) {
+                    throw new RequiredFieldMissingException(
+                            "le champ requis '" + field.name() + "' est manquant ou vide dans la reponse du LLM");
                 }
+
             }
-
-
-            String dateNaissance = champs.get("date_naissance").asText();
-            if (!dateNaissance.matches("\\d{2}[-./]\\d{2}[-./]\\d{4}")) {
-                System.out.println("Format de date incorrect : " + dateNaissance);
-                return false;
-            }
-
 
             return true;
-
+        } catch (RequiredFieldMissingException | JsonDataMappingException e) {
+            throw e;
         } catch (Exception e) {
-            System.out.println("Réponse JSON invalide : " + e.getMessage());
-            return false;
+            throw new JsonDataMappingException("Format de reponse JSON invalide : " + e.getMessage());
         }
-
     }
 }
+

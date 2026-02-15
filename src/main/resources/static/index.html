@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extraction Documents</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+.drop-zone {
+  border: 2px dashed #3b82f6;
+  border-radius: 8px;
+  color: #3b82f6;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  width: 100%;
+  min-height: 150px;
+  position: relative;
+}
+.drop-zone.dragover {
+  background-color: #bfdbfe;
+  border-color: #1d4ed8;
+}
+</style>
+</head>
+<body class="bg-gray-100 p-8">
+<div class="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+  <h1 class="text-2xl font-bold mb-6 text-center">Extraction Documents</h1>
+
+  <div class="flex flex-col md:flex-row gap-6">
+    <div class="md:w-1/3">
+      <h2 class="font-bold mb-2 text-center">Historique des documents</h2>
+      <div id="history" class="p-4 bg-gray-50 rounded border border-gray-300 max-h-[500px] overflow-y-auto"></div>
+    </div>
+
+    <div class="md:w-2/3 flex flex-col items-center">
+      <div class="drop-zone w-full relative" id="dropZone">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2m-6-8l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        <strong class="text-lg mb-1">Glissez un fichier ici</strong>
+        <span class="text-sm text-gray-500 mb-2">ou cliquez pour selectionner</span>
+        <input type="file" id="fileInput" accept=".pdf,image/*" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer">
+        <p id="fileName" class="text-gray-700 font-medium text-center mt-2"></p>
+      </div>
+
+      <div class="w-full flex flex-col gap-4 mt-4">
+        <label class="font-bold mb-1">Type de document :</label>
+        <select id="docType" class="border border-gray-300 rounded px-2 py-1"></select>
+
+        <div id="customFieldsContainer" class="mt-2 hidden flex flex-col gap-2">
+          <input type="text" id="customTypeName" placeholder="Nom du type de document" class="border border-gray-300 rounded px-2 py-1 w-full">
+          <div id="fieldsList" class="flex flex-col gap-2"></div>
+          <button type="button" id="addFieldBtn" class="mt-2 w-full bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+            + Ajouter un champ
+          </button>
+          <button type="button" id="saveTypeBtn" class="w-full bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700">
+            Ajouter type de document
+          </button>
+        </div>
+
+        <div class="flex flex-col">
+          <label class="font-bold mb-1">Modele Gemini :</label>
+          <select id="openAIModule" class="border border-gray-300 rounded px-2 py-1">
+            <option value="">Chargement des modeles...</option>
+          </select>
+        </div>
+      </div>
+
+      <button id="uploadBtn" class="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex justify-center items-center gap-2">
+        <span>Envoyer</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7v14"/>
+        </svg>
+      </button>
+
+      <p id="message" class="mt-2 text-center font-medium"></p>
+
+      <div class="mt-4 w-full">
+        <h2 class="font-bold mb-2 text-center">Resultat complet</h2>
+        <pre id="jsonOutput" class="p-4 bg-gray-100 rounded border border-gray-300 overflow-x-auto whitespace-pre-wrap text-sm"></pre>
+        <button id="downloadJsonBtn" type="button" class="mt-2 w-full bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800 disabled:opacity-50" disabled>
+          Telecharger le JSON
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const uploadBtn = document.getElementById('uploadBtn');
+const message = document.getElementById('message');
+const fileNameDiv = document.getElementById('fileName');
+const jsonOutput = document.getElementById('jsonOutput');
+const downloadJsonBtn = document.getElementById('downloadJsonBtn');
+
+const docType = document.getElementById('docType');
+const customFieldsContainer = document.getElementById('customFieldsContainer');
+const fieldsList = document.getElementById('fieldsList');
+const addFieldBtn = document.getElementById('addFieldBtn');
+const saveTypeBtn = document.getElementById('saveTypeBtn');
+const customTypeName = document.getElementById('customTypeName');
+const openAIModule = document.getElementById('openAIModule');
+const historyDiv = document.getElementById('history');
+
+let selectedFile = null;
+let lastJsonResult = null;
+let documentTypesCache = [];
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length > 0) {
+    selectedFile = e.dataTransfer.files[0];
+    fileNameDiv.textContent = selectedFile.name;
+    message.textContent = '';
+    jsonOutput.textContent = '';
+    lastJsonResult = null;
+    downloadJsonBtn.disabled = true;
+  }
+});
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length > 0) {
+    selectedFile = fileInput.files[0];
+    fileNameDiv.textContent = selectedFile.name;
+    message.textContent = '';
+    jsonOutput.textContent = '';
+    lastJsonResult = null;
+    downloadJsonBtn.disabled = true;
+  }
+});
+
+docType.addEventListener('change', () => {
+  if (docType.value === '__custom__') {
+    customFieldsContainer.classList.remove('hidden');
+    if (fieldsList.children.length === 0) addFieldLine();
+  } else {
+    customFieldsContainer.classList.add('hidden');
+    fieldsList.innerHTML = '';
+    customTypeName.value = '';
+  }
+  renderPreviewForSelectedType();
+});
+
+function addFieldLine() {
+  const div = document.createElement('div');
+  div.className = 'flex gap-2';
+
+  const inputName = document.createElement('input');
+  inputName.type = 'text';
+  inputName.placeholder = 'Nom du champ';
+  inputName.className = 'border border-gray-300 rounded px-2 py-1 flex-1';
+
+  const selectType = document.createElement('select');
+  selectType.className = 'border border-gray-300 rounded px-2 py-1';
+  ['STRING', 'TEXT', 'INTEGER', 'LONG', 'DECIMAL', 'BOOLEAN', 'DATE', 'TIME', 'DATETIME'].forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.toLowerCase();
+    opt.textContent = t;
+    selectType.appendChild(opt);
+  });
+
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.textContent = 'x';
+  removeBtn.className = 'bg-red-500 text-white px-2 rounded hover:bg-red-600';
+  removeBtn.addEventListener('click', () => {
+    div.remove();
+    renderPreviewForSelectedType();
+  });
+
+  div.appendChild(inputName);
+  div.appendChild(selectType);
+  div.appendChild(removeBtn);
+  fieldsList.appendChild(div);
+}
+
+addFieldBtn.addEventListener('click', addFieldLine);
+fieldsList.addEventListener('input', renderPreviewForSelectedType);
+fieldsList.addEventListener('change', renderPreviewForSelectedType);
+
+function displayJSON(data) {
+  jsonOutput.textContent = JSON.stringify(data, null, 2);
+  lastJsonResult = data;
+  downloadJsonBtn.disabled = false;
+}
+
+function getCustomFieldsData() {
+  const fieldsData = [];
+  fieldsList.querySelectorAll('div').forEach(div => {
+    const name = div.querySelector('input').value.trim();
+    const type = div.querySelector('select').value;
+    if (name) fieldsData.push({ name, type });
+  });
+  return fieldsData;
+}
+
+function renderPreviewForSelectedType() {
+  let fields = [];
+  if (docType.value === '__custom__') {
+    fields = getCustomFieldsData();
+  } else {
+    const found = documentTypesCache.find(t => t.name === docType.value);
+    fields = Array.isArray(found && found.documentFields) ? found.documentFields : [];
+  }
+
+  const preview = {};
+  fields.forEach(f => {
+    if (f && f.name) preview[f.name] = null;
+  });
+
+  jsonOutput.textContent = JSON.stringify(preview, null, 2);
+  lastJsonResult = null;
+  downloadJsonBtn.disabled = true;
+}
+
+async function loadDocumentTypes() {
+  try {
+    const response = await fetch('/api/documents/types');
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    const documentTypes = await response.json();
+    documentTypesCache = Array.isArray(documentTypes) ? documentTypes : [];
+    docType.innerHTML = '';
+    documentTypesCache.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.name;
+      opt.textContent = t.name;
+      docType.appendChild(opt);
+    });
+
+    const custom = document.createElement('option');
+    custom.value = '__custom__';
+    custom.textContent = 'Autres';
+    docType.appendChild(custom);
+    renderPreviewForSelectedType();
+  } catch (e) {
+    message.textContent = 'Impossible de charger les types: ' + e.message;
+    message.className = 'text-red-600';
+  }
+}
+
+function renderHistoryItem(doc) {
+  const item = document.createElement('div');
+  item.className = 'border-b border-gray-200 px-2 py-2 text-sm';
+
+  const top = document.createElement('div');
+  top.className = 'font-semibold text-gray-800';
+  top.textContent = doc.documentType || 'Type inconnu';
+
+  const ts = document.createElement('div');
+  ts.className = 'text-xs text-gray-500';
+  ts.textContent = doc.createdAt || '';
+
+  const payload = document.createElement('pre');
+  payload.className = 'mt-1 text-xs bg-white border rounded p-2 overflow-x-auto whitespace-pre-wrap';
+  payload.textContent = JSON.stringify(doc.content || {}, null, 2);
+
+  item.appendChild(top);
+  item.appendChild(ts);
+  item.appendChild(payload);
+  return item;
+}
+
+async function loadHistory() {
+  try {
+    const response = await fetch('/api/documents/all');
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    const docs = await response.json();
+    historyDiv.innerHTML = '';
+
+    if (!Array.isArray(docs) || docs.length === 0) {
+      historyDiv.innerHTML = '<p class="text-sm text-gray-500">Aucun document enregistre.</p>';
+      return;
+    }
+
+    docs.forEach(doc => historyDiv.appendChild(renderHistoryItem(doc)));
+  } catch (e) {
+    historyDiv.innerHTML = `<p class="text-sm text-red-600">Erreur chargement historique: ${e.message}</p>`;
+  }
+}
+
+async function loadGeminiModels() {
+  try {
+    const response = await fetch('/api/models');
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    const raw = await response.text();
+    const payload = JSON.parse(raw);
+    const models = Array.isArray(payload.models) ? payload.models : [];
+    const generationModels = models
+      .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+      .map(m => (m.name || '').replace(/^models\//, ''))
+      .filter(Boolean);
+
+    openAIModule.innerHTML = '';
+    if (generationModels.length === 0) {
+      throw new Error('Aucun modele Gemini disponible.');
+    }
+
+    generationModels.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      openAIModule.appendChild(opt);
+    });
+  } catch (e) {
+    openAIModule.innerHTML = '<option value="">Aucun modele charge</option>';
+    message.textContent = 'Impossible de charger les modeles Gemini: ' + e.message;
+    message.className = 'text-red-600';
+  }
+}
+
+async function createCustomTypeIfNeeded() {
+  if (docType.value !== '__custom__') {
+    return docType.value;
+  }
+
+  const typeName = customTypeName.value.trim();
+  if (!typeName) {
+    throw new Error('Nom du type personnalise obligatoire.');
+  }
+
+  const fieldsData = getCustomFieldsData();
+
+  if (fieldsData.length === 0) {
+    throw new Error('Ajoutez au moins un champ pour le type personnalise.');
+  }
+
+  const response = await fetch('/api/documents/types', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: null, name: typeName, documentFields: fieldsData })
+  });
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  await loadDocumentTypes();
+  return typeName;
+}
+
+saveTypeBtn.addEventListener('click', async () => {
+  try {
+    const typeName = customTypeName.value.trim();
+    if (!typeName) {
+      throw new Error('Nom du type personnalise obligatoire.');
+    }
+
+    const fieldsData = getCustomFieldsData();
+    if (fieldsData.length === 0) {
+      throw new Error('Ajoutez au moins un champ pour le type personnalise.');
+    }
+
+    const response = await fetch('/api/documents/types', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: null, name: typeName, documentFields: fieldsData })
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    await loadDocumentTypes();
+    docType.value = typeName;
+    customFieldsContainer.classList.add('hidden');
+    fieldsList.innerHTML = '';
+    customTypeName.value = '';
+    renderPreviewForSelectedType();
+    message.textContent = 'Type de document ajoute avec succes.';
+    message.className = 'text-green-600';
+  } catch (e) {
+    message.textContent = 'Erreur ajout type: ' + e.message;
+    message.className = 'text-red-600';
+  }
+});
+
+uploadBtn.addEventListener('click', async () => {
+  if (!selectedFile) {
+    message.textContent = 'Veuillez selectionner un fichier.';
+    message.className = 'text-red-600';
+    return;
+  }
+
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+  if (!allowedTypes.includes(selectedFile.type)) {
+    message.textContent = `Erreur : type de fichier non supporte (${selectedFile.name})`;
+    message.className = 'text-red-600';
+    return;
+  }
+
+  try {
+    message.textContent = 'Traitement en cours...';
+    message.className = 'text-green-600';
+    if (!openAIModule.value) {
+      throw new Error('Selectionnez un modele Gemini valide.');
+    }
+
+    const finalType = await createCustomTypeIfNeeded();
+    const formData = new FormData();
+    formData.append('document', selectedFile);
+    formData.append('type', finalType);
+    formData.append('model', openAIModule.value);
+
+    const response = await fetch('/api/documents', { method: 'POST', body: formData });
+    if (response.ok) {
+      const text = await response.text();
+      const data = JSON.parse(text);
+      displayJSON(data);
+      message.textContent = 'Extraction reussie !';
+      message.className = 'text-green-600';
+      await loadHistory();
+    } else {
+      const errorText = await response.text();
+      message.textContent = `Erreur serveur : ${errorText}`;
+      message.className = 'text-red-600';
+      jsonOutput.textContent = '';
+      lastJsonResult = null;
+      downloadJsonBtn.disabled = true;
+    }
+  } catch (e) {
+    message.textContent = 'Erreur : ' + e.message;
+    message.className = 'text-red-600';
+    jsonOutput.textContent = '';
+    lastJsonResult = null;
+    downloadJsonBtn.disabled = true;
+  }
+});
+
+downloadJsonBtn.addEventListener('click', () => {
+  if (!lastJsonResult) return;
+  const blob = new Blob([JSON.stringify(lastJsonResult, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const baseName = selectedFile && selectedFile.name ? selectedFile.name.replace(/\.[^.]+$/, '') : 'resultat';
+  a.href = url;
+  a.download = `${baseName}_result.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+loadDocumentTypes();
+loadGeminiModels();
+loadHistory();
+</script>
+</body>
+</html>

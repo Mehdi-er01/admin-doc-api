@@ -1,61 +1,75 @@
 package com.fsts.document_api.Service;
 
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fsts.document_api.Dto.DocumentDTO;
+import com.fsts.document_api.Exception.InvalidDocumentException;
+import com.fsts.document_api.Record.DocumentTypeField;
+
+
 
 @Service
 public class ProcessService {
     private ValidationService valideService;
+    private DocumentTypeService documentTypeService;
     private OCRService ocrService;
-    private LLMService llmService;
+    private GeminiService llmService;
     private PDFService pdfService;
+    private DocumentService documentService;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
-    public ProcessService(ValidationService valideService , OCRService ocrService, LLMService llmService , PDFService pdfService){
-        this.valideService=valideService;
-        this.ocrService=ocrService;
-        this.llmService=llmService;
+    public ProcessService(ValidationService valideService,
+            DocumentTypeService documentTypeService,
+            OCRService ocrService, GeminiService llmService,
+            PDFService pdfService, DocumentService documentService) {
+
+        this.valideService = valideService;
+        this.documentTypeService = documentTypeService;
+        this.ocrService = ocrService;
+        this.llmService = llmService;
+        this.documentService = documentService;
         this.pdfService = pdfService;
     }
-   
-    public String processDocument(MultipartFile file) throws Exception {
-        if(!valideService.validateDocument(file)){
-            throw  new Exception("Document invalide");
-        }
-        String extractedText = pdfService.extractTextFromPDF(file);
-        if (extractedText == null || extractedText.trim().isEmpty()) {
-            extractedText = ocrService.performOCR(file);
-        }
-//        String extractedText = ocrService.performOCR(file);
-        String jsonResult = llmService.generateResponse(extractedText);
-        if (!valideService.validateLLMResponse(jsonResult)) {
-            throw new Exception("JSON invalide généré par le LLM");
-        }
 
+    public String processDocument(MultipartFile file, String type, String model) throws InvalidDocumentException, Exception {
 
-        return jsonResult;
-    }
-    public String processImage(MultipartFile file) throws Exception {
-        // Valider le fichier (on peut accepter pdf ou images ici)
         if (!valideService.validateDocument(file)) {
-            throw new Exception("Fichier invalide");
+            throw new InvalidDocumentException("fichier invalide pour le traitement du document");
         }
+        String extractedText = null;
+        if (file.getContentType() != null && file.getContentType().startsWith("image/")) {
+            extractedText = ocrService.performOCR(file);
 
-        // Extraire le texte via OCR
-        String extractedText = ocrService.performOCR(file);
-
+        } else if ("application/pdf".equals(file.getContentType())) {
+             extractedText = pdfService.extractTextFromPDF(file);
+        }
         if (extractedText == null || extractedText.trim().isEmpty()) {
-            throw new Exception("Aucun texte extrait de l'image");
+            throw new InvalidDocumentException("aucun texte extrait du fichier");
         }
 
-        // Générer le JSON via LLM
-        String jsonResult = llmService.generateResponse(extractedText);
+        List<DocumentTypeField> documentFields = documentTypeService
+                .getDocumentTypeByName(type)
+                .getDocumentFields();
 
-        // Valider le JSON
-        if (!valideService.validateLLMResponse(jsonResult)) {
-            throw new Exception("JSON invalide généré par le LLM");
+        String jsonResult = llmService.generateResponse(extractedText, documentFields, model);
+        if (!valideService.validateLLMResponse(jsonResult, documentFields)) {
+            throw new Exception("JSON invalide genere par le LLM");
         }
+        Map<String, String> content = objectMapper.readValue(
+                  jsonResult,
+                  new TypeReference<Map<String, String>>() {}
+          );
 
+        documentService.saveDocument(new DocumentDTO(null, content, type));
         return jsonResult;
     }
+
+
 
 }

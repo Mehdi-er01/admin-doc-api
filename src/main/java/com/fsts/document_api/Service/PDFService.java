@@ -4,36 +4,27 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
+import com.fsts.document_api.Exception.FileProcessingException;
 import java.io.File;
 import java.io.FileOutputStream;
 
 @Service
 public class PDFService {
 
-    public String extractTextFromPDF(MultipartFile file) throws Exception {
+    public String extractTextFromPDF(MultipartFile file) throws FileProcessingException {
 
-        File convFile = convertMultipartToFile(file);
-
-        PDDocument document = PDDocument.load(convFile);
-        PDFTextStripper stripper = new PDFTextStripper();
-
-        String text = stripper.getText(document);
-
-        document.close();
-
-        return text;
-    }
-
-    private File convertMultipartToFile(MultipartFile multipartFile) throws Exception {
-
-        File convFile = new File(System.getProperty("java.io.tmpdir")
-                + "/" + multipartFile.getOriginalFilename());
-
-        try (FileOutputStream fos = new FileOutputStream(convFile)) {
-            fos.write(multipartFile.getBytes());
+        String text = "";
+        PDFTextStripper stripper= null;
+        File convFile = OCRService.convertMultipartToFile(file);
+        try(PDDocument document = PDDocument.load(convFile)){
+            stripper = new PDFTextStripper();
+            text = stripper.getText(document);
+        } catch (Exception e) {
+            throw new FileProcessingException("Erreur lors du traitement du fichier PDF : " + e.getMessage());
+        } finally {
+            convFile.delete();
         }
-
-        return convFile;
-    }
+        return text;
+    }    
 }
+
