@@ -47,7 +47,7 @@ public class GeminiService {
                     
                 ### RAW OCR TEXT
                 """ + extractedText;
-
+        System.out.println(extractedText);
         
         Map<String,Object> requestBody = Map.of("contents",List.of(
             Map.of("role", "user","parts",List.of(Map.of("text",userMessage)))
@@ -84,6 +84,7 @@ public class GeminiService {
         .path("text")
         .asText();
 
+        System.out.println(result);
 
         return result;
         

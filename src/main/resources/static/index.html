@@ -33,7 +33,7 @@
 
   <div class="flex flex-col md:flex-row gap-6">
     <div class="md:w-1/3">
-      <h2 class="font-bold mb-2 text-center">Historique des fichiers envoyes</h2>
+      <h2 class="font-bold mb-2 text-center">Historique des documents</h2>
       <div id="history" class="p-4 bg-gray-50 rounded border border-gray-300 max-h-[500px] overflow-y-auto"></div>
     </div>
 
@@ -58,6 +58,9 @@
           <button type="button" id="addFieldBtn" class="mt-2 w-full bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
             + Ajouter un champ
           </button>
+          <button type="button" id="saveTypeBtn" class="w-full bg-indigo-600 text-white px-2 py-1 rounded hover:bg-indigo-700">
+            Ajouter type de document
+          </button>
         </div>
 
         <div class="flex flex-col">
@@ -79,7 +82,10 @@
 
       <div class="mt-4 w-full">
         <h2 class="font-bold mb-2 text-center">Resultat complet</h2>
-        <div id="jsonOutput" class="p-4 bg-gray-100 rounded border border-gray-300 overflow-x-auto"></div>
+        <pre id="jsonOutput" class="p-4 bg-gray-100 rounded border border-gray-300 overflow-x-auto whitespace-pre-wrap text-sm"></pre>
+        <button id="downloadJsonBtn" type="button" class="mt-2 w-full bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800 disabled:opacity-50" disabled>
+          Telecharger le JSON
+        </button>
       </div>
     </div>
   </div>
@@ -92,15 +98,20 @@ const uploadBtn = document.getElementById('uploadBtn');
 const message = document.getElementById('message');
 const fileNameDiv = document.getElementById('fileName');
 const jsonOutput = document.getElementById('jsonOutput');
+const downloadJsonBtn = document.getElementById('downloadJsonBtn');
 
 const docType = document.getElementById('docType');
 const customFieldsContainer = document.getElementById('customFieldsContainer');
 const fieldsList = document.getElementById('fieldsList');
 const addFieldBtn = document.getElementById('addFieldBtn');
+const saveTypeBtn = document.getElementById('saveTypeBtn');
 const customTypeName = document.getElementById('customTypeName');
 const openAIModule = document.getElementById('openAIModule');
+const historyDiv = document.getElementById('history');
 
 let selectedFile = null;
+let lastJsonResult = null;
+let documentTypesCache = [];
 
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
@@ -111,7 +122,9 @@ dropZone.addEventListener('drop', e => {
     selectedFile = e.dataTransfer.files[0];
     fileNameDiv.textContent = selectedFile.name;
     message.textContent = '';
-    jsonOutput.innerHTML = '';
+    jsonOutput.textContent = '';
+    lastJsonResult = null;
+    downloadJsonBtn.disabled = true;
   }
 });
 
@@ -120,7 +133,9 @@ fileInput.addEventListener('change', () => {
     selectedFile = fileInput.files[0];
     fileNameDiv.textContent = selectedFile.name;
     message.textContent = '';
-    jsonOutput.innerHTML = '';
+    jsonOutput.textContent = '';
+    lastJsonResult = null;
+    downloadJsonBtn.disabled = true;
   }
 });
 
@@ -133,6 +148,7 @@ docType.addEventListener('change', () => {
     fieldsList.innerHTML = '';
     customTypeName.value = '';
   }
+  renderPreviewForSelectedType();
 });
 
 function addFieldLine() {
@@ -157,7 +173,10 @@ function addFieldLine() {
   removeBtn.type = 'button';
   removeBtn.textContent = 'x';
   removeBtn.className = 'bg-red-500 text-white px-2 rounded hover:bg-red-600';
-  removeBtn.addEventListener('click', () => div.remove());
+  removeBtn.addEventListener('click', () => {
+    div.remove();
+    renderPreviewForSelectedType();
+  });
 
   div.appendChild(inputName);
   div.appendChild(selectType);
@@ -166,40 +185,42 @@ function addFieldLine() {
 }
 
 addFieldBtn.addEventListener('click', addFieldLine);
+fieldsList.addEventListener('input', renderPreviewForSelectedType);
+fieldsList.addEventListener('change', renderPreviewForSelectedType);
 
-function addToHistory(fileName, docTypeValue, modelValue, status) {
-  const historyDiv = document.getElementById('history');
-  const item = document.createElement('div');
-  item.className = 'flex justify-between border-b border-gray-200 px-2 py-1 text-sm';
-  const left = document.createElement('span');
-  left.textContent = `${fileName} (${docTypeValue}) [${modelValue}]`;
-  const right = document.createElement('span');
-  right.textContent = status;
-  right.className = status === 'Reussi' ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
-  item.appendChild(left);
-  item.appendChild(right);
-  historyDiv.prepend(item);
+function displayJSON(data) {
+  jsonOutput.textContent = JSON.stringify(data, null, 2);
+  lastJsonResult = data;
+  downloadJsonBtn.disabled = false;
 }
 
-function displayJSONVertical(data) {
-  jsonOutput.innerHTML = '';
-  const container = document.createElement('div');
-  container.className = 'space-y-2';
+function getCustomFieldsData() {
+  const fieldsData = [];
+  fieldsList.querySelectorAll('div').forEach(div => {
+    const name = div.querySelector('input').value.trim();
+    const type = div.querySelector('select').value;
+    if (name) fieldsData.push({ name, type });
+  });
+  return fieldsData;
+}
 
-  for (const key in data) {
-    const row = document.createElement('div');
-    row.className = 'flex justify-between border-b border-gray-300 px-2 py-1 bg-gray-50';
-    const label = document.createElement('span');
-    label.textContent = key;
-    label.className = 'font-bold';
-    const value = document.createElement('span');
-    value.textContent = data[key];
-    row.appendChild(label);
-    row.appendChild(value);
-    container.appendChild(row);
+function renderPreviewForSelectedType() {
+  let fields = [];
+  if (docType.value === '__custom__') {
+    fields = getCustomFieldsData();
+  } else {
+    const found = documentTypesCache.find(t => t.name === docType.value);
+    fields = Array.isArray(found && found.documentFields) ? found.documentFields : [];
   }
 
-  jsonOutput.appendChild(container);
+  const preview = {};
+  fields.forEach(f => {
+    if (f && f.name) preview[f.name] = null;
+  });
+
+  jsonOutput.textContent = JSON.stringify(preview, null, 2);
+  lastJsonResult = null;
+  downloadJsonBtn.disabled = true;
 }
 
 async function loadDocumentTypes() {
@@ -210,8 +231,9 @@ async function loadDocumentTypes() {
     }
 
     const documentTypes = await response.json();
+    documentTypesCache = Array.isArray(documentTypes) ? documentTypes : [];
     docType.innerHTML = '';
-    documentTypes.forEach(t => {
+    documentTypesCache.forEach(t => {
       const opt = document.createElement('option');
       opt.value = t.name;
       opt.textContent = t.name;
@@ -222,9 +244,53 @@ async function loadDocumentTypes() {
     custom.value = '__custom__';
     custom.textContent = 'Autres';
     docType.appendChild(custom);
+    renderPreviewForSelectedType();
   } catch (e) {
     message.textContent = 'Impossible de charger les types: ' + e.message;
     message.className = 'text-red-600';
+  }
+}
+
+function renderHistoryItem(doc) {
+  const item = document.createElement('div');
+  item.className = 'border-b border-gray-200 px-2 py-2 text-sm';
+
+  const top = document.createElement('div');
+  top.className = 'font-semibold text-gray-800';
+  top.textContent = doc.documentType || 'Type inconnu';
+
+  const ts = document.createElement('div');
+  ts.className = 'text-xs text-gray-500';
+  ts.textContent = doc.createdAt || '';
+
+  const payload = document.createElement('pre');
+  payload.className = 'mt-1 text-xs bg-white border rounded p-2 overflow-x-auto whitespace-pre-wrap';
+  payload.textContent = JSON.stringify(doc.content || {}, null, 2);
+
+  item.appendChild(top);
+  item.appendChild(ts);
+  item.appendChild(payload);
+  return item;
+}
+
+async function loadHistory() {
+  try {
+    const response = await fetch('/api/documents/all');
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    const docs = await response.json();
+    historyDiv.innerHTML = '';
+
+    if (!Array.isArray(docs) || docs.length === 0) {
+      historyDiv.innerHTML = '<p class="text-sm text-gray-500">Aucun document enregistre.</p>';
+      return;
+    }
+
+    docs.forEach(doc => historyDiv.appendChild(renderHistoryItem(doc)));
+  } catch (e) {
+    historyDiv.innerHTML = `<p class="text-sm text-red-600">Erreur chargement historique: ${e.message}</p>`;
   }
 }
 
@@ -271,12 +337,7 @@ async function createCustomTypeIfNeeded() {
     throw new Error('Nom du type personnalise obligatoire.');
   }
 
-  const fieldsData = [];
-  fieldsList.querySelectorAll('div').forEach(div => {
-    const name = div.querySelector('input').value.trim();
-    const type = div.querySelector('select').value;
-    if (name) fieldsData.push({ name, type });
-  });
+  const fieldsData = getCustomFieldsData();
 
   if (fieldsData.length === 0) {
     throw new Error('Ajoutez au moins un champ pour le type personnalise.');
@@ -296,6 +357,42 @@ async function createCustomTypeIfNeeded() {
   return typeName;
 }
 
+saveTypeBtn.addEventListener('click', async () => {
+  try {
+    const typeName = customTypeName.value.trim();
+    if (!typeName) {
+      throw new Error('Nom du type personnalise obligatoire.');
+    }
+
+    const fieldsData = getCustomFieldsData();
+    if (fieldsData.length === 0) {
+      throw new Error('Ajoutez au moins un champ pour le type personnalise.');
+    }
+
+    const response = await fetch('/api/documents/types', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: null, name: typeName, documentFields: fieldsData })
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    await loadDocumentTypes();
+    docType.value = typeName;
+    customFieldsContainer.classList.add('hidden');
+    fieldsList.innerHTML = '';
+    customTypeName.value = '';
+    renderPreviewForSelectedType();
+    message.textContent = 'Type de document ajoute avec succes.';
+    message.className = 'text-green-600';
+  } catch (e) {
+    message.textContent = 'Erreur ajout type: ' + e.message;
+    message.className = 'text-red-600';
+  }
+});
+
 uploadBtn.addEventListener('click', async () => {
   if (!selectedFile) {
     message.textContent = 'Veuillez selectionner un fichier.';
@@ -307,7 +404,6 @@ uploadBtn.addEventListener('click', async () => {
   if (!allowedTypes.includes(selectedFile.type)) {
     message.textContent = `Erreur : type de fichier non supporte (${selectedFile.name})`;
     message.className = 'text-red-600';
-    addToHistory(selectedFile.name, docType.value, openAIModule.value, 'Erreur');
     return;
   }
 
@@ -328,25 +424,44 @@ uploadBtn.addEventListener('click', async () => {
     if (response.ok) {
       const text = await response.text();
       const data = JSON.parse(text);
-      displayJSONVertical(data);
-      addToHistory(selectedFile.name, finalType, openAIModule.value, 'Reussi');
+      displayJSON(data);
       message.textContent = 'Extraction reussie !';
       message.className = 'text-green-600';
+      await loadHistory();
     } else {
       const errorText = await response.text();
       message.textContent = `Erreur serveur : ${errorText}`;
       message.className = 'text-red-600';
-      addToHistory(selectedFile.name, finalType, openAIModule.value, 'Erreur');
+      jsonOutput.textContent = '';
+      lastJsonResult = null;
+      downloadJsonBtn.disabled = true;
     }
   } catch (e) {
     message.textContent = 'Erreur : ' + e.message;
     message.className = 'text-red-600';
-    addToHistory(selectedFile.name, docType.value, openAIModule.value, 'Erreur');
+    jsonOutput.textContent = '';
+    lastJsonResult = null;
+    downloadJsonBtn.disabled = true;
   }
+});
+
+downloadJsonBtn.addEventListener('click', () => {
+  if (!lastJsonResult) return;
+  const blob = new Blob([JSON.stringify(lastJsonResult, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const baseName = selectedFile && selectedFile.name ? selectedFile.name.replace(/\.[^.]+$/, '') : 'resultat';
+  a.href = url;
+  a.download = `${baseName}_result.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 });
 
 loadDocumentTypes();
 loadGeminiModels();
+loadHistory();
 </script>
 </body>
 </html>
