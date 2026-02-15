@@ -1,0 +1,11 @@
+{
+  "Projet": "Reengineering du processus de traitement des courriers clients",
+  "Date": "04/03/09",
+  "Présents": "M. François, Mme Brigitte, Mme Alice, Mme Pauline, Mme Fannie, M. Yohan",
+  "Excusée": "Mme Nicole",
+  "Décision à prendre": "Construire une bibliothèque de lettres et paragraphes types permettant des réponses personnalisées aux courriers des clients, constituées de briques standardisées disponibles dans une base de données accessible aux personnes habilitées de tout poste de travail",
+  "Avantages": "Gain de temps dans la rédaction\nHomogénéisation des réponses",
+  "Inconvénients": "Ne peut pas être exhaustif donc ne remplace pas totalement les lettres « sur mesure »\nPeut entraîner une certaine banalisation des réponses aux lettres des clients\nNécessite la création d’une fonction de gestionnaire de la bibliothèque de courriers",
+  "Observations des participants": "Cette bibliothèque doit pouvoir être utilisée par le siège et aussi les commerciaux du réseau\nLes courriers types doivent avoir une tournure « commerciale » même s’ils sont la réponse à des courriers administratifs",
+  "Décision finale": "Accord sous réserve des observations émises"
+}
