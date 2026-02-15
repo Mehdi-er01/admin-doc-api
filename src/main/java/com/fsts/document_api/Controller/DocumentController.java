@@ -1,30 +1,24 @@
 package com.fsts.document_api.Controller;
 
-import com.fsts.document_api.Service.ProcessService;
-
 import java.util.List;
 
-import javax.print.Doc;
-
-import org.aspectj.apache.bcel.classfile.Module.Open;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fsts.document_api.Dto.DocumentDTO;
 import com.fsts.document_api.Dto.DocumentTypeDTO;
-import com.fsts.document_api.Entity.DocumentType;
 import com.fsts.document_api.Exception.InvalidDocumentException;
 import com.fsts.document_api.Service.DocumentService;
 import com.fsts.document_api.Service.DocumentTypeService;
-import com.fsts.document_api.Service.OCRService;
-import com.fsts.document_api.Service.OpenAiService;
-
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+import com.fsts.document_api.Service.GeminiService;
+import com.fsts.document_api.Service.ProcessService;
 
 
 @RestController
@@ -33,11 +27,12 @@ public class DocumentController {
     private final DocumentTypeService documentTypeService;
     private final DocumentService documentService;
     private final ProcessService processService;
-    private final OpenAiService llmService;
-    DocumentController(DocumentTypeService documentTypeService,
+    private final GeminiService llmService;
+
+    public DocumentController(DocumentTypeService documentTypeService,
          DocumentService documentService,
          ProcessService processService,
-         OpenAiService llmService){
+         GeminiService llmService){
 
         this.documentTypeService=documentTypeService;
         this.documentService=documentService;
@@ -78,7 +73,7 @@ public class DocumentController {
         List<DocumentDTO> documents = documentService.getAllDocuments();
         return ResponseEntity.ok(documents);
     }
-     @GetMapping("/models")
+    @GetMapping("/models")
     public String getModels() {
         return llmService.getAvailableModels();
     }

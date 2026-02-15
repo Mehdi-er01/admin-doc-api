@@ -9,7 +9,6 @@ import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fsts.document_api.Dto.DocumentDTO;
-import com.fsts.document_api.Entity.DocumentType;
 import com.fsts.document_api.Exception.InvalidDocumentException;
 import com.fsts.document_api.Record.DocumentTypeField;
 
@@ -20,14 +19,14 @@ public class ProcessService {
     private ValidationService valideService;
     private DocumentTypeService documentTypeService;
     private OCRService ocrService;
-    private OpenAiService llmService;
+    private GeminiService llmService;
     private PDFService pdfService;
     private DocumentService documentService;
     private ObjectMapper objectMapper = new ObjectMapper();
 
     public ProcessService(ValidationService valideService,
             DocumentTypeService documentTypeService,
-            OCRService ocrService, OpenAiService llmService,
+            OCRService ocrService, GeminiService llmService,
             PDFService pdfService, DocumentService documentService) {
 
         this.valideService = valideService;
@@ -47,7 +46,7 @@ public class ProcessService {
         if (file.getContentType() != null && file.getContentType().startsWith("image/")) {
             extractedText = ocrService.performOCR(file);
 
-        } else if (file.getContentType().equals("application/pdf")) {
+        } else if ("application/pdf".equals(file.getContentType())) {
              extractedText = pdfService.extractTextFromPDF(file);
         }
         if (extractedText == null || extractedText.trim().isEmpty()) {

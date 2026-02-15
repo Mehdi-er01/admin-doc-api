@@ -12,16 +12,7 @@ import com.fsts.document_api.Enum.FieldType;
 import com.fsts.document_api.Exception.JsonDataMappingException;
 import com.fsts.document_api.Exception.RequiredFieldMissingException;
 import com.fsts.document_api.Record.DocumentTypeField;
-import com.fsts.document_api.Utils.BooleanChecker;
-import com.fsts.document_api.Utils.DateChecker;
-import com.fsts.document_api.Utils.DateTimeChecker;
-import com.fsts.document_api.Utils.DecimalChecker;
-import com.fsts.document_api.Utils.IntegerChecker;
-import com.fsts.document_api.Utils.LongChecker;
-import com.fsts.document_api.Utils.StringChecker;
-import com.fsts.document_api.Utils.TextChecker;
-import com.fsts.document_api.Utils.TimeChecker;
-import com.fsts.document_api.Utils.TypeChecker;
+
 
 @Service
 public class ValidationService {
@@ -32,16 +23,6 @@ public class ValidationService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final Map<FieldType, TypeChecker> typeCheckers = Map.of(
-            FieldType.STRING, new StringChecker(),
-            FieldType.TEXT, new TextChecker(),
-            FieldType.INTEGER, new IntegerChecker(),
-            FieldType.LONG, new LongChecker(),
-            FieldType.DECIMAL, new DecimalChecker(),
-            FieldType.BOOLEAN, new BooleanChecker(),
-            FieldType.DATE, new DateChecker(),
-            FieldType.TIME, new TimeChecker(),
-            FieldType.DATETIME, new DateTimeChecker());
 
     public boolean validateDocument(MultipartFile file) {
         if (file.isEmpty()) {
@@ -72,16 +53,6 @@ public class ValidationService {
                             "le champ requis '" + field.name() + "' est manquant ou vide dans la reponse du LLM");
                 }
 
-                String rawValue = fields.get(field.name()).asText();
-                TypeChecker checker = typeCheckers.get(field.type());
-                if (checker == null) {
-                    throw new JsonDataMappingException("Aucun verificateur trouve pour le type de champ : " + field.type());
-                }
-
-                if (!checker.isValid(rawValue)) {
-                    throw new JsonDataMappingException(
-                            "valeur invalide pour le champ '" + field.name() + "'. type attendu : " + field.type().getValue());
-                }
             }
 
             return true;
