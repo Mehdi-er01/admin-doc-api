@@ -31,7 +31,7 @@ public class OCRService {
         try {
             result = tesseract.doOCR(convertMultipartToFile(file));
         } catch (TesseractException e) {
-            throw new RuntimeException("Error performing OCR: " + e.getMessage());
+            throw new RuntimeException("Erreur lors de l'OCR : " + e.getMessage());
         }
         
         return result;
@@ -45,7 +45,7 @@ public class OCRService {
     try {
         tempDir = Files.createTempDirectory("tessdata_temp");
     } catch (IOException e) {
-        throw new FileProcessingException("Error creating temporary directory for tessdata: " + e.getMessage());
+        throw new FileProcessingException("Erreur lors de la creation du dossier temporaire tessdata : " + e.getMessage());
     }
     File tempDirFile = tempDir.toFile();
     tempDirFile.deleteOnExit();
@@ -58,7 +58,7 @@ public class OCRService {
                 try{
                     Files.copy(resource.getInputStream(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
-                    throw new FileProcessingException("Error copying tessdata file: " + e.getMessage());
+                    throw new FileProcessingException("Erreur lors de la copie du fichier tessdata : " + e.getMessage());
                 }
     }
     
@@ -73,9 +73,10 @@ public class OCRService {
     try (FileOutputStream fos = new FileOutputStream(convFile)) {
         fos.write(multipartFile.getBytes());
     } catch(IOException e) {
-        throw new FileProcessingException("Error converting multipart file to file: " + e.getMessage());
+        throw new FileProcessingException("Erreur lors de la conversion du fichier multipart en fichier : " + e.getMessage());
     }
     
     return convFile;
 }
 }
+

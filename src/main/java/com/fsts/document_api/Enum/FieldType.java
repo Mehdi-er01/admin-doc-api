@@ -28,13 +28,14 @@ public enum FieldType {
       @JsonCreator
       public static FieldType fromValue(String raw) {
           if (raw == null) {
-              throw new RequiredFieldMissingException("FieldType cannot be null");
+              throw new RequiredFieldMissingException("Le type de champ ne peut pas etre nul");
           }
           for (FieldType type : values()) {
               if (type.value.equalsIgnoreCase(raw.trim())) {
                   return type;
               }
           }
-          throw new IllegalArgumentException("Unknown FieldType: " + raw);
+          throw new IllegalArgumentException("Type de champ inconnu : " + raw);
       }
   }
+

@@ -21,7 +21,7 @@ public class JsonListConverter implements AttributeConverter<List<DocumentTypeFi
         try {
             return objectMapper.writeValueAsString(attribute);
         } catch (JsonProcessingException e) {
-            throw new JsonDataMappingException("Can't Map Entity Attribute to Database data" + e.getMessage());
+            throw new JsonDataMappingException("Impossible de mapper l'attribut de l'entite vers les donnees de la base : " + e.getMessage());
         }
     }
 
@@ -34,9 +34,10 @@ public class JsonListConverter implements AttributeConverter<List<DocumentTypeFi
             return objectMapper.readValue(dbData,
                     objectMapper.getTypeFactory().constructCollectionType(List.class, DocumentTypeField.class));
         } catch (JsonProcessingException e) {
-            throw new JsonDataMappingException("Can't Map Database data to Entity Attribute" + e.getMessage());
+            throw new JsonDataMappingException("Impossible de mapper les donnees de la base vers l'attribut de l'entite : " + e.getMessage());
         }
 
     }
 
 }
+

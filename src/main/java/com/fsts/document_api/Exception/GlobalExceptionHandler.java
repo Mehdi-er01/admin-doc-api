@@ -14,7 +14,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInvalidDocumentException(InvalidDocumentException ex) { 
     ErrorResponse error = new ErrorResponse(LocalDateTime.now(),
     HttpStatus.BAD_REQUEST.value(),
-    "Invalid Document",
+    "Document invalide",
     ex.getMessage());
     return new ResponseEntity<>(error,HttpStatus.BAD_REQUEST);
     }
@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnsupportedDocumentException(UnsupportedFormatException ex) {
         ErrorResponse error = new ErrorResponse(LocalDateTime.now(),
         HttpStatus.UNSUPPORTED_MEDIA_TYPE.value(),
-        "Unsupported Format",
+        "Format non pris en charge",
         ex.getMessage());
         return new ResponseEntity<>(error,HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleRequiredFieldMissingException(RequiredFieldMissingException ex) {
         ErrorResponse error = new ErrorResponse(LocalDateTime.now(),
         HttpStatus.BAD_REQUEST.value(),
-        "Required Field Missing",
+        "Champ requis manquant",
         ex.getMessage());
         return new ResponseEntity<>(error,HttpStatus.BAD_REQUEST);
     }
@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleJsonDataMappingException(JsonDataMappingException ex) {
         ErrorResponse error = new ErrorResponse(LocalDateTime.now(),
         HttpStatus.INTERNAL_SERVER_ERROR.value(),
-        "JSON Processing Error",
+        "Erreur de traitement JSON",
         ex.getMessage());
         return new ResponseEntity<>(error,HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleFileProcessingException(FileProcessingException ex) {
         ErrorResponse error = new ErrorResponse(LocalDateTime.now(),
         HttpStatus.INTERNAL_SERVER_ERROR.value(),
-        "File Processing Error",
+        "Erreur de traitement de fichier",
         ex.getMessage());
         return new ResponseEntity<>(error,HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -59,7 +59,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         ErrorResponse error = new ErrorResponse(LocalDateTime.now(),
         HttpStatus.BAD_REQUEST.value(),
-        "Method Argument Not Valid",
+        "Argument de methode invalide",
         ex.getMessage());
         return new ResponseEntity<>(error,HttpStatus.BAD_REQUEST);
     }
@@ -68,9 +68,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex) {
         ErrorResponse error = new ErrorResponse(LocalDateTime.now(),
         HttpStatus.INTERNAL_SERVER_ERROR.value(),
-        "Internal Server Error",
+        "Erreur interne du serveur",
         ex.getMessage());
         return new ResponseEntity<>(error,HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }
+

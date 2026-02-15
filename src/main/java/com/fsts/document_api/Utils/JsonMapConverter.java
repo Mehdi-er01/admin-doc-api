@@ -24,7 +24,7 @@ public class JsonMapConverter implements AttributeConverter<Map<String, String>,
         try {
             return mapper.writeValueAsString(attribute);
         } catch (IOException e) {
-            throw new JsonDataMappingException("Can't Map Entity Attribute to Database data: " + e.getMessage());
+            throw new JsonDataMappingException("Impossible de mapper l'attribut de l'entite vers les donnees de la base : " + e.getMessage());
         }
     }
 

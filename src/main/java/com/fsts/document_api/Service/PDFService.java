@@ -20,10 +20,11 @@ public class PDFService {
             stripper = new PDFTextStripper();
             text = stripper.getText(document);
         } catch (Exception e) {
-            throw new FileProcessingException("Error processing PDF file: " + e.getMessage());
+            throw new FileProcessingException("Erreur lors du traitement du fichier PDF : " + e.getMessage());
         } finally {
             convFile.delete();
         }
         return text;
     }    
 }
+

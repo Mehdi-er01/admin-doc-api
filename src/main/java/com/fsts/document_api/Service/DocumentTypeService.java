@@ -24,7 +24,7 @@ public class DocumentTypeService {
             return documentType.getName().equals(name);
         })
         .findFirst()
-        .orElseThrow(() -> new RuntimeException("Document type not found: " + name)); 
+        .orElseThrow(() -> new RuntimeException("Type de document introuvable : " + name)); 
     }
     
     public List<DocumentTypeDTO> getAllDocumentTypes() {
@@ -44,3 +44,4 @@ public class DocumentTypeService {
         documentTypesRepository.save(documentType);
     }
 }
+
