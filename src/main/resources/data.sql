@@ -1,5 +1,3 @@
--- DELETE FROM documents;
--- DELETE FROM document_types;
 
 -- INSERT INTO document_types (name, fields) VALUES
 -- ('CIN', '[{"name":"nom","type":"string"},{"name":"prenom","type":"string"},{"name":"date_naissance","type":"date"},{"name":"lieu_naissance","type":"string"},{"name":"numero_cin","type":"string"}]'),
